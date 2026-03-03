@@ -23,6 +23,8 @@ namespace Assets._Project.Develop.Runtime.Infrastucture.EntryPoint
             container.RegisterAsSingle(CreateSceneSwitcherService);
 
             container.RegisterAsSingle(CreateInputCheckerService);
+
+            container.RegisterAsSingle(CreateKeySceneSwitcher);
         }
 
         public static InputCheckerService CreateInputCheckerService(DIContainer c)
@@ -53,5 +55,7 @@ namespace Assets._Project.Develop.Runtime.Infrastucture.EntryPoint
 
             return Object.Instantiate(coroutinePrefab);
         }
+        public static KeySceneSwitcher CreateKeySceneSwitcher(DIContainer c)
+            => new KeySceneSwitcher(c);
     }
 }

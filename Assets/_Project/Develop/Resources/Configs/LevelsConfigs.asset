@@ -12,4 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fe320fe4151e1a4ba3dc26203aa47d0, type: 3}
   m_Name: LevelsConfigs
   m_EditorClassIdentifier: 
-  _configs: []
+  _configs:
+  - <GameMode>k__BackingField: 0
+    <LevelConfig>k__BackingField: {fileID: 11400000, guid: 562a596326eebe64a85df833dfd90a2a,
+      type: 2}
+  - <GameMode>k__BackingField: 1
+    <LevelConfig>k__BackingField: {fileID: 11400000, guid: 1aa479a7443621043b4376333e0d54f8,
+      type: 2}

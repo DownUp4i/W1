@@ -12,6 +12,7 @@ namespace Assets._Project.Develop.Runtime.Meta.Infrastructure
     public class MainMenuBootstrap : SceneBootstrap
     {
         private DIContainer _container;
+        private KeySceneSwitcher _keySceneSwitcher;
 
         public override IEnumerator Initialize()
         {
@@ -21,6 +22,10 @@ namespace Assets._Project.Develop.Runtime.Meta.Infrastructure
         public override void ProcessRegistration(DIContainer container, IInputSceneArgs sceneArgs = null)
         {
             _container = container;
+
+            _keySceneSwitcher = _container.Resolve<KeySceneSwitcher>();
+
+            MainMenuContextRegistrations.Process(_container);
         }
 
         public override void Run()
@@ -30,22 +35,10 @@ namespace Assets._Project.Develop.Runtime.Meta.Infrastructure
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1))
+            if (_container != null)
             {
-                SceneSwitcherService sceneSwitcher = _container.Resolve<SceneSwitcherService>();
-                ICoroutineService coroutineService = _container.Resolve<ICoroutineService>();
-
-                coroutineService.StartPerform(sceneSwitcher.ProcessSwitchTo(Scenes.Gameplay, 
-                    new GameplayInputArgs(GameMode.Digits)));
-            }
-
-            if (Input.GetKeyDown(KeyCode.Alpha2))
-            {
-                SceneSwitcherService sceneSwitcher = _container.Resolve<SceneSwitcherService>();
-                ICoroutineService coroutineService = _container.Resolve<ICoroutineService>();
-
-                coroutineService.StartPerform(sceneSwitcher.ProcessSwitchTo(Scenes.Gameplay, 
-                    new GameplayInputArgs(GameMode.Letters)));
+                _keySceneSwitcher.SwitchByGamemode(GameMode.Digits, KeyCode.Alpha1);
+                _keySceneSwitcher.SwitchByGamemode(GameMode.Letters, KeyCode.Alpha2);
             }
         }
     }

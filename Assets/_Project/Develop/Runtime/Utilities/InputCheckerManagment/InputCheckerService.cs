@@ -7,20 +7,18 @@ namespace Assets._Project.Develop.Runtime.Utilities.InputCheckerManagment
 {
     public class InputCheckerService
     {
-        public event Action<KeyCode> OnKeyPressed;
+        public event Action<char> OnKeyPressed;
         private bool isActive = false;
 
         public IEnumerator Check()
         {
             while (isActive)
             {
-                foreach (KeyCode key in System.Enum.GetValues(typeof(KeyCode)))
-                {
-                    if (Input.GetKeyDown(key))
-                    {
-                        OnKeyPressed?.Invoke(key);
-                    }
-                }
+                string input = Input.inputString;
+
+                foreach (char c in input)
+                    OnKeyPressed?.Invoke(c);
+
                 yield return null;
             }
         }

@@ -10,30 +10,30 @@ public class RandomService
         return text[index];
     }
 
-    //public List<string> GenerateFrom(string[] array)
-    //{
-    //    int quantity = Random.Range(3, 6);
-    //    List<string> result = new List<string>();
+    public List<string> GenerateFrom(string text)
+    {
+        int quantity = Random.Range(3, 6);
+        List<string> result = new List<string>();
 
-    //    for (int i = 0; i < quantity; i++)
-    //    {
-    //        string selected = array[Random.Range(0, array.Length)];
-    //        result.Add(selected);
-    //    }
+        for (int i = 0; i < quantity; i++)
+        {
+            int index = Random.Range(0, text.Length);
+            result.Add(text[index].ToString());
+        }
 
-    //    return result;
-    //}
+        return result;
+    }
 
-    //public List<string> GenerateFrom(string[] array, int quantity)
-    //{
-    //    List<string> result = new List<string>();
+    public List<string> GenerateFrom(string text, int quantity)
+    {
+        List<string> result = new List<string>();
 
-    //    for (int i = 0; i < quantity; i++)
-    //    {
-    //        string selected = array[Random.Range(0, array.Length)];
-    //        result.Add(selected);
-    //    }
+        for (int i = 0; i < quantity; i++)
+        {
+            int index = Random.Range(0, text.Length);
+            result.Add(text[index].ToString());
+        }
 
-    //    return result;
-    //}
+        return result;
+    }
 }

@@ -2,86 +2,79 @@
 using System.Collections.Generic;
 using System.Linq;
 using Assets._Project.Develop.Configs.Gamemode;
-using Assets._Project.Develop.Runtime.Infrastucture.DI;
-using Assets._Project.Develop.Runtime.Utilities.ConfigsManagment;
 using Assets._Project.Develop.Runtime.Utilities.CoroutineManagment;
 using Assets._Project.Develop.Runtime.Utilities.InputCheckerManagment;
 using Assets._Project.Develop.Runtime.Utilities.Reactive;
-using UnityEngine;
 
 namespace Assets._Project.Develop.Runtime.Gameplay
 {
     public class GameplayCycle : IDisposable
     {
-        public event Action<string> OnInputAdded;
-        private DIContainer _container;
-        private GameMode _gameMode;
-
         private InputCheckerService _inputChecker;
+        private RandomService _randomService;
+        private LevelConfig _levelConfig;
+        private ICoroutineService _coroutine;
 
         private ReactiveList<string> _input;
         private List<string> _secret;
+
         private int _count;
 
-        public bool IsWin {  get; private set; }
+        public bool IsWin { get; private set; }
 
-        public GameplayCycle(DIContainer container, GameMode gameMode)
+        public GameplayCycle(
+            InputCheckerService inputChecker,
+            RandomService randomService,
+            ICoroutineService coroutine,
+            LevelConfig levelConfig)
         {
-            _container = container;
-            _gameMode = gameMode;
-
-            _inputChecker = _container.Resolve<InputCheckerService>();
+            _inputChecker = inputChecker;
+            _randomService = randomService;
+            _coroutine = coroutine;
 
             _input = new ReactiveList<string>();
             _secret = new List<string>();
+
+            _levelConfig = levelConfig;
         }
 
         public void Start()
         {
-            ConfigsProviderService configService = _container.Resolve<ConfigsProviderService>();
-            LevelsConfigs levelsConfigs = configService.GetConfig<LevelsConfigs>();
-            LevelConfig levelConfig = levelsConfigs.GetLevelConfigBy(_gameMode);
-
             Restart();
-
-            _inputChecker.Activate();
-
-            _container.Resolve<ICoroutineService>().StartPerform(_inputChecker.Check());
         }
 
         public void Restart()
         {
-            ConfigsProviderService configService = _container.Resolve<ConfigsProviderService>();
-            LevelsConfigs levelsConfigs = configService.GetConfig<LevelsConfigs>();
-            LevelConfig levelConfig = levelsConfigs.GetLevelConfigBy(_gameMode);
+            Unsubscribe();
 
             _inputChecker.OnKeyPressed += CheckInput;
             _input.OnAdded += ShowInput;
+
+            IsWin = false;
+
+            _inputChecker.Activate();
 
             _input.Clear();
             _secret.Clear();
 
             _count = 0;
 
-            SetRandomSymbols(levelConfig.Symbols);
+            _secret = _randomService.GenerateFrom(_levelConfig.Symbols);
+
+            _coroutine.StartPerform(_inputChecker.Check());
+
+            ShowSecret();
         }
 
-        private void CheckInput(KeyCode key)
+        private void CheckInput(char keyChar)
         {
-            string inputChar = "";
-
-            if (key >= KeyCode.Alpha0 && key <= KeyCode.Alpha9)
-                inputChar = ((char)('0' + (key - KeyCode.Alpha0))).ToString();
-            else if (key >= KeyCode.A && key <= KeyCode.Z)
-                inputChar = key.ToString().ToLower();
-            else
-                return;
+            string inputChar = keyChar.ToString().ToLower();
 
             _input.Add(inputChar);
 
             ++_count;
 
-            if (_count == _secret.Count)
+            if (_count >= _secret.Count)
             {
                 if (_input.Values.SequenceEqual(_secret))
                     Win();
@@ -106,42 +99,38 @@ namespace Assets._Project.Develop.Runtime.Gameplay
 
             _secret.ForEach(item => text += item);
             UnityEngine.Debug.Log("Секретные символы: " + text);
-
         }
 
         private void Win()
         {
             UnityEngine.Debug.Log("Win");
             UnityEngine.Debug.Log("Нажмите пробел чтобы перейти на главное меню");
-            _inputChecker.OnKeyPressed -= CheckInput;
-            _input.OnAdded -= ShowInput;
+
             IsWin = true;
-        }
 
-        private void SetRandomSymbols(string symbols, int quantity = 5)
-        {
-            RandomService randomService = _container.Resolve<RandomService>();
+            _inputChecker.Deactivate();
 
-            for (int i = 0; i < quantity; i++)
-            {
-                char symbol = randomService.GetRandomCharFrom(symbols);
-                _secret.Add(symbol.ToString());
-            }
-
-            ShowSecret();
+            Unsubscribe();
         }
 
         private void Loose()
         {
             UnityEngine.Debug.Log("Loose");
 
-            _inputChecker.OnKeyPressed -= CheckInput;
-            _input.OnAdded -= ShowInput;
-
             IsWin = false;
+
+            _inputChecker.Deactivate();
+
+            Unsubscribe();
         }
 
         public void Dispose()
+        {
+            _inputChecker.OnKeyPressed -= CheckInput;
+            _input.OnAdded -= ShowInput;
+        }
+
+        private void Unsubscribe()
         {
             _inputChecker.OnKeyPressed -= CheckInput;
             _input.OnAdded -= ShowInput;
