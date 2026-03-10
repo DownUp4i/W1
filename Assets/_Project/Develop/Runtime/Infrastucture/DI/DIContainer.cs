@@ -8,20 +8,23 @@ namespace Assets._Project.Develop.Runtime.Infrastucture.DI
     public class DIContainer
     {
         private Dictionary<Type, Registration> _container = new();
-
         private DIContainer _parent;
+
+        public bool IsNonLazy { get; private set; }
 
         public DIContainer() : this(null) { }
 
         public DIContainer(DIContainer parent) => _parent = parent;
 
-        public void RegisterAsSingle<T>(Func<DIContainer, T> creator)
+        public IRegistrationOptions RegisterAsSingle<T>(Func<DIContainer, T> creator)
         {
             if (IsAlreadyRegister<T>())
                 throw new InvalidOperationException($"{typeof(T)} already register");
 
             Registration registration = new Registration(container => creator.Invoke(container));
             _container.Add(typeof(T), registration);
+
+            return registration;
         }
 
         public bool IsAlreadyRegister<T>()
@@ -44,6 +47,15 @@ namespace Assets._Project.Develop.Runtime.Infrastucture.DI
                 return _parent.Resolve<T>();
 
             throw new InvalidOperationException($"Registration for {typeof(T)} not found");
+        }
+
+        public void Initialize ()
+        {
+            foreach(Registration registration in _container.Values)
+            {
+                if(registration.IsNonLazy)
+                    registration.CreateInstanceFrom(this);
+            }
         }
     }
 }

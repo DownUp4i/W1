@@ -6,6 +6,7 @@ using Assets._Project.Develop.Runtime.Gameplay.Infrastucture;
 using Assets._Project.Develop.Runtime.Infrastucture.DI;
 using Assets._Project.Develop.Runtime.Utilities.ConfigsManagment;
 using Assets._Project.Develop.Runtime.Utilities.CoroutineManagment;
+using Assets._Project.Develop.Runtime.Utilities.DataManagment.DataProviders;
 using Assets._Project.Develop.Runtime.Utilities.InputCheckerManagment;
 using Assets._Project.Develop.Runtime.Utilities.SceneManagment;
 using UnityEngine;
@@ -28,6 +29,7 @@ public class GameplayBootstrap : SceneBootstrap
         _container = container;
 
         _keySceneSwitcher = _container.Resolve<KeySceneSwitcher>();
+
 
         if (sceneArgs is not GameplayInputArgs gameplayArgs)
             throw new ArgumentException($"{nameof(sceneArgs)} is not match with {typeof(GameplayInputArgs)}");

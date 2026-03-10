@@ -1,7 +1,10 @@
 ﻿using Assets._Project.Develop.Configs.Gamemode;
+using Assets._Project.Develop.Runtime.Gameplay.Features;
 using Assets._Project.Develop.Runtime.Infrastucture.DI;
+using Assets._Project.Develop.Runtime.Meta.Features.Wallet;
 using Assets._Project.Develop.Runtime.Utilities.ConfigsManagment;
 using Assets._Project.Develop.Runtime.Utilities.CoroutineManagment;
+using Assets._Project.Develop.Runtime.Utilities.DataManagment.DataProviders;
 using Assets._Project.Develop.Runtime.Utilities.InputCheckerManagment;
 using Assets._Project.Develop.Runtime.Utilities.SceneManagment;
 
@@ -14,14 +17,15 @@ namespace Assets._Project.Develop.Runtime.Gameplay.Infrastucture
         public static void Process(DIContainer container, GameplayInputArgs gameplayInputArgs)
         {
             _gameplayInputArgs = gameplayInputArgs;
+
             container.RegisterAsSingle(CreateRandomService);
             container.RegisterAsSingle(CreateGameplayCycle);
         }
 
-        public static RandomService CreateRandomService(DIContainer c)
+        private static RandomService CreateRandomService(DIContainer c)
             => new RandomService();
 
-        public static GameplayCycle CreateGameplayCycle(DIContainer c)
+        private static GameplayCycle CreateGameplayCycle(DIContainer c)
         {
             ConfigsProviderService configService = c.Resolve<ConfigsProviderService>();
             LevelsConfigs levelsConfigs = configService.GetConfig<LevelsConfigs>();
@@ -32,8 +36,15 @@ namespace Assets._Project.Develop.Runtime.Gameplay.Infrastucture
             RandomService randomService = c.Resolve<RandomService>();
             ICoroutineService coroutineService = c.Resolve<ICoroutineService>();
             KeySceneSwitcher keySceneSwitcher = c.Resolve<KeySceneSwitcher>();
+            WinLoseService winLoseService = c.Resolve<WinLoseService>();
+            PlayerDataProvider playerDataProvider = c.Resolve<PlayerDataProvider>();
 
-            return new GameplayCycle(inputCheckerService, randomService, coroutineService, levelConfig);
+            return new GameplayCycle(
+                inputCheckerService,
+                randomService, coroutineService,
+                levelConfig,
+                winLoseService,
+                playerDataProvider);
         }
     }
 }

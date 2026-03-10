@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Assets._Project.Develop.Configs.Gamemode;
+using Assets._Project.Develop.Runtime.Gameplay.Features;
 using Assets._Project.Develop.Runtime.Utilities.CoroutineManagment;
+using Assets._Project.Develop.Runtime.Utilities.DataManagment.DataProviders;
 using Assets._Project.Develop.Runtime.Utilities.InputCheckerManagment;
 using Assets._Project.Develop.Runtime.Utilities.Reactive;
 
@@ -14,11 +16,13 @@ namespace Assets._Project.Develop.Runtime.Gameplay
         private RandomService _randomService;
         private LevelConfig _levelConfig;
         private ICoroutineService _coroutine;
+        private WinLoseService _winLoseService;
+        private PlayerDataProvider _playerDataProvider;
 
         private ReactiveList<string> _input;
         private List<string> _secret;
 
-        private int _count;
+        private int _inputCount;
 
         public bool IsWin { get; private set; }
 
@@ -26,8 +30,11 @@ namespace Assets._Project.Develop.Runtime.Gameplay
             InputCheckerService inputChecker,
             RandomService randomService,
             ICoroutineService coroutine,
-            LevelConfig levelConfig)
+            LevelConfig levelConfig,
+            WinLoseService winLoseService,
+            PlayerDataProvider playerDataProvider)
         {
+            _playerDataProvider = playerDataProvider;
             _inputChecker = inputChecker;
             _randomService = randomService;
             _coroutine = coroutine;
@@ -36,6 +43,7 @@ namespace Assets._Project.Develop.Runtime.Gameplay
             _secret = new List<string>();
 
             _levelConfig = levelConfig;
+            _winLoseService = winLoseService;
         }
 
         public void Start()
@@ -57,7 +65,7 @@ namespace Assets._Project.Develop.Runtime.Gameplay
             _input.Clear();
             _secret.Clear();
 
-            _count = 0;
+            _inputCount = 0;
 
             _secret = _randomService.GenerateFrom(_levelConfig.Symbols);
 
@@ -72,14 +80,18 @@ namespace Assets._Project.Develop.Runtime.Gameplay
 
             _input.Add(inputChar);
 
-            ++_count;
+            ++_inputCount;
 
-            if (_count >= _secret.Count)
+            if (_inputCount >= _secret.Count)
             {
                 if (_input.Values.SequenceEqual(_secret))
-                    Win();
+                    _winLoseService.Win();
                 else
-                    Loose();
+                    _winLoseService.Lose();
+
+                _inputChecker.Deactivate();
+                Unsubscribe();
+                _coroutine.StartPerform(_playerDataProvider.Save());
             }
         }
 
@@ -99,29 +111,6 @@ namespace Assets._Project.Develop.Runtime.Gameplay
 
             _secret.ForEach(item => text += item);
             UnityEngine.Debug.Log("Секретные символы: " + text);
-        }
-
-        private void Win()
-        {
-            UnityEngine.Debug.Log("Win");
-            UnityEngine.Debug.Log("Нажмите пробел чтобы перейти на главное меню");
-
-            IsWin = true;
-
-            _inputChecker.Deactivate();
-
-            Unsubscribe();
-        }
-
-        private void Loose()
-        {
-            UnityEngine.Debug.Log("Loose");
-
-            IsWin = false;
-
-            _inputChecker.Deactivate();
-
-            Unsubscribe();
         }
 
         public void Dispose()

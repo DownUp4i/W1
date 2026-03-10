@@ -30,6 +30,8 @@ namespace Assets._Project.Develop.Runtime.Utilities.SceneManagment
 
             sceneBootstrap.ProcessRegistration(sceneContainer, sceneArgs);
 
+            sceneContainer.Initialize();
+
             yield return sceneBootstrap.Initialize();
 
             sceneBootstrap.Run();
